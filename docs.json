@@ -70,28 +70,39 @@
     ]
   },
   "navbar": {
-    "links": [],
+    "links": [
+      {
+        "type": "button",
+        "label": "BuiltByBit",
+        "href": "https://builtbybit.com/resources/pictogram.96531/"
+      },
+      {
+        "type": "button",
+        "label": "Polymart",
+        "href": "https://polymart.org/product/9416/pictogram"
+      }
+    ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "Discord",
+      "href": "https://discord.gg/Vg3YHcdNMe"
     }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
   },
   "appearance": {
     "default": "dark"
   },
   "description": "Documentation for the Pictogram plugin",
-  "logo": "/images/long_logo.png"
+  "logo": "/images/text_logo.png",
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  }
 }
