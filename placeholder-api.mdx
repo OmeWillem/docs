@@ -1,0 +1,19 @@
+---
+title: 'PlaceholderAPI'
+description: "Support for PlaceholderAPI"
+sidebarTitle: "PlaceholderAPI"
+---
+
+Pictogram has support for [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi), allowing you to use your registered images as placeholders anywhere that supports PAPI.
+
+<Warning>
+  Pictogram requires PlaceholderAPI version 2.12.1 or higher.
+</Warning>
+
+## Placeholders
+
+| Placeholder                        | Description                              |
+| ---------------------------------- | ---------------------------------------- |
+| `%pictogram_image_<name>%`         | Displays the image with the given name.  |
+
+Replace `<name>` with the ID of any image registered in your `images` config. For example, `%pictogram_image_pictogram_tag%` would display the `pictogram_tag` image.

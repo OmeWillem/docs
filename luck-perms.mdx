@@ -1,0 +1,20 @@
+---
+title: 'LuckPerms'
+description: "Using Pictogram images as prefixes in LuckPerms"
+sidebarTitle: "LuckPerms"
+---
+
+You can use Pictogram images as prefixes in [LuckPerms](https://modrinth.com/plugin/luckperms) by combining them with [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi). This lets you create fully custom image-based rank tags that show up in chat and tab.
+
+<Warning>
+  This requires PlaceholderAPI 2.12.1+ to be installed.
+</Warning>
+
+## Setting a Prefix
+
+Use the `%pictogram_image_<name>%` placeholder as the prefix value for a group or user. For example, to set an image prefix on the `admin` group:
+```
+/lp group admin meta setprefix %pictogram_image_admin_tag%
+```
+
+This will display the `admin_tag` image registered in your Pictogram config as the group's prefix.

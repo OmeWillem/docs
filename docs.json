@@ -26,6 +26,13 @@
               "images",
               "settings"
             ]
+          },
+          {
+            "group": "Usage",
+            "pages": [
+              "placeholder-api",
+              "luck-perms"
+            ]
           }
         ]
       }
