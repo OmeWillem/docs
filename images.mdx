@@ -1,0 +1,58 @@
+---
+title: "Images"
+description: "Define the images used across your MOTDs, rank tags, emojis and more."
+sidebarTitle: "Images"
+---
+
+All images are registered under the `images` key in your `config.yml`. Each entry gets a unique ID that you reference elsewhere in the config, for example in an MOTD or inline with `<image:id>`.
+
+```yaml
+images:
+  pictogram_tag:
+    path: pictogram_tag.png
+  test_motd:
+    path: test_motd.png
+```
+
+| Field  | Description                                                         |
+| ------ | ------------------------------------------------------------------- |
+| `path` | The filename of the image, relative to the Pictogram plugin folder. |
+
+## Shadow Color
+
+You can set a global shadow color for text rendered by Pictogram. This is optional, and if not set the default shadow color is used.
+
+```yaml
+images:
+  pictogram_tag:
+    path: pictogram_tag.png
+    shadow_color: "#FFFFFFFF"
+```
+
+| Field          | Description                                      |
+| -------------- | ------------------------------------------------ |
+| `shadow_color` | An RGBA hex value for the text shadow. Optional. |
+
+---
+
+## Using Images
+
+Once an image is registered, you can use it in two ways:
+
+**As an image MOTD** — reference the image ID directly in a MOTD entry:
+
+```yaml
+motds:
+  my_motd:
+    image: test_motd
+```
+
+**Inline in text** — embed an image inside a description line using the `<image:id>` tag:
+
+```
+<image:pictogram_tag><grey>, wow! what a cool tag...
+```
+
+<Tip>
+  Images do not require a resourcepack. Players see them automatically.
+</Tip>

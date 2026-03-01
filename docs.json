@@ -16,7 +16,15 @@
           {
             "group": "Getting started",
             "pages": [
-              "index"
+              "introduction"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "motds",
+              "images",
+              "settings"
             ]
           }
         ]

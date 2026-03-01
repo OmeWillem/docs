@@ -1,0 +1,53 @@
+---
+title: "MOTDs"
+description: "Configure image and text-based MOTDs for your server."
+sidebarTitle: "MOTDs"
+---
+
+MOTDs are configured under the `motds` key in your `config.yml`. Currently, these keys don't do anything special. If you have multiple MOTDs they'll be chosen at random when a client pings the server.
+
+## Image MOTD
+
+The simplest type of MOTD. Just point it to an image defined in your `images` section and Pictogram handles the rest.
+
+```yaml
+motds:
+  funny_motd:
+    image: test_motd
+```
+
+| Field   | Description                                               |
+| ------- | --------------------------------------------------------- |
+| `image` | The ID of an image defined under `images` in your config. |
+
+---
+
+## Text MOTD
+
+Instead of an image, you can write out your MOTD lines manually. Supports MiniMessage formatting tags, as well as Pictogram-specific tags like `<image:id>`.
+
+```yaml
+motds:
+  other_motd:
+    description:
+      - "<rainbow>This is some text!"
+      - "<image:pictogram_tag><grey>, wow! what a cool tag..."
+```
+
+| Field         | Description                                                                    |
+| ------------- | ------------------------------------------------------------------------------ |
+| `description` | A list of lines shown as the MOTD. Supports MiniMessage and `<image:id>` tags. |
+
+### Fallback Description
+
+Optionally, you can define a `fallback-description` that is shown to players on older client versions that don't support modern formatting. If this is not set, those players will just see the server's default MOTD.
+
+```yaml
+    fallback-description:
+      - "this is shown to people that are on a lower version"
+      - "this is optional and will show the default motd if not present!"
+```
+
+<Note>
+  Either `image` or `description` is required per MOTD entry, not both.
+</Note>
