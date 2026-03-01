@@ -1,0 +1,39 @@
+---
+title: "Designing Images"
+description: "Guidelines for designing images for Pictogram"
+sidebarTitle: "Designing Images"
+---
+
+Before creating your images, there are a few things to keep in mind to make sure everything looks right in-game.
+
+## Sizes
+
+The sizes below apply specifically to MOTD images. For rank tags, emojis and other uses, images can be any size as long as both the width and height are divisible by 8.
+
+| Type             | Recommended Size |
+| ---------------- | ---------------- |
+| Full image MOTD  | 264x16           |
+| Single line MOTD | 264x8            |
+
+<img
+  title="Test Motd"
+  className="hidden dark:block"
+  src="/images/full-motd-example-1.png"
+  alt="Full MOTD example"
+/>
+<img
+  title="Test Motd"
+  className="dark:hidden"
+  src="/images/full-motd-example.png"
+  alt="Full MOTD example"
+/>
+
+![Single Motd Example](/images/single-motd-example.png)
+
+## Transparency
+
+Transparency is not supported. Any transparent pixels will be filled in with black, so make sure your image has a solid background.
+
+## Shadow Line
+
+When designing a full image MOTD, be aware that there is a shadow line running through the middle of it. Make sure to design around it so it doesn't interfere with your image. You can configure the color of this shadow line using the [`shadow_color`](/images#shadow-color) setting.
