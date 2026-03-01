@@ -69,7 +69,6 @@
       }
     ]
   },
-  "logo": "/images/pictogram_logo_downscaled.png",
   "navbar": {
     "links": [],
     "primary": {
@@ -92,5 +91,7 @@
   },
   "appearance": {
     "default": "dark"
-  }
+  },
+  "description": "Documentation for the Pictogram plugin",
+  "logo": "/images/long_logo.png"
 }
