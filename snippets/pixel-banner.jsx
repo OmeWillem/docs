@@ -1,17 +1,3 @@
-const SCALE = 4;
-const EXPECTED_W = 264;
-const EXPECTED_H = 16;
-const HALF_H = 8;
-
-function hexToRgb(hex) {
-  const clean = hex.replace("#", "");
-  return {
-    r: parseInt(clean.slice(0, 2), 16),
-    g: parseInt(clean.slice(2, 4), 16),
-    b: parseInt(clean.slice(4, 6), 16),
-  };
-}
-
 function buildShadowCanvas(sourceCanvas, shadowColor) {
   const w = sourceCanvas.width;
   const h = sourceCanvas.height;
@@ -42,17 +28,31 @@ function sliceCanvas(src, x, y, w, h) {
   return c;
 }
 
+function hexToRgb(hex) {
+  const clean = hex.replace("#", "");
+  return {
+    r: parseInt(clean.slice(0, 2), 16),
+    g: parseInt(clean.slice(2, 4), 16),
+    b: parseInt(clean.slice(4, 6), 16),
+  };
+}
+
 export const PixelBanner = () => {
+  const scale = 4;
+  const expectedW = 264;
+  const expectedH = 16;
+  const halfH = 8;
+
   const [strips, setStrips] = useState(null);
-  const [shadowHex, setShadowHex] = useState("#000000");
-  const [shadowAlpha, setShadowAlpha] = useState(180);
+  const [hex, setHex] = useState("#000000");
+  const [a, setA] = useState(255);
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef(null);
   const mainCanvasesRef = useRef(null);
 
-  const buildStrips = (top, bot, hex, alpha) => {
-    const rgb = hexToRgb(hex);
+  const buildStripsFromCanvases = (top, bot, h, alpha) => {
+    const rgb = hexToRgb(h);
     const sc = { r: rgb.r, g: rgb.g, b: rgb.b, a: alpha };
     return [
       { main: top, shadow: buildShadowCanvas(top, sc) },
@@ -65,18 +65,18 @@ export const PixelBanner = () => {
     setError("");
     const img = new Image();
     img.onload = () => {
-      if (img.width !== EXPECTED_W || img.height !== EXPECTED_H) {
+      if (img.width !== expectedW || img.height !== expectedH) {
         setError(`Image must be exactly 264x16px. Got ${img.width}x${img.height}px.`);
         return;
       }
       const full = document.createElement("canvas");
-      full.width = EXPECTED_W;
-      full.height = EXPECTED_H;
+      full.width = expectedW;
+      full.height = expectedH;
       full.getContext("2d").drawImage(img, 0, 0);
-      const top = sliceCanvas(full, 0, 0, EXPECTED_W, HALF_H);
-      const bot = sliceCanvas(full, 0, HALF_H, EXPECTED_W, HALF_H);
+      const top = sliceCanvas(full, 0, 0, expectedW, halfH);
+      const bot = sliceCanvas(full, 0, halfH, expectedW, halfH);
       mainCanvasesRef.current = [top, bot];
-      setStrips(buildStrips(top, bot, shadowHex, shadowAlpha));
+      setStrips(buildStripsFromCanvases(top, bot, hex, a));
     };
     img.src = URL.createObjectURL(file);
   };
@@ -84,44 +84,53 @@ export const PixelBanner = () => {
   const applySettings = () => {
     if (!mainCanvasesRef.current) return;
     const [top, bot] = mainCanvasesRef.current;
-    setStrips(buildStrips(top, bot, shadowHex, shadowAlpha));
+    setStrips(buildStripsFromCanvases(top, bot, hex, a));
   };
 
-  const opacityPct = Math.round((shadowAlpha / 255) * 100);
+  const rgb = hexToRgb(hex);
 
   return (
     <div className="not-prose p-4 border dark:border-white/10 border-zinc-950/10 rounded-xl space-y-4">
 
-      {/* Controls */}
-      <div className="flex flex-wrap gap-x-6 gap-y-3 items-end">
+      {/* Shadow color control */}
+      <div className="flex flex-wrap gap-4 items-end">
         <label className="flex flex-col gap-1 text-sm text-zinc-950/70 dark:text-white/70">
           Shadow color
-          <div className="flex items-center gap-2">
+          <div className="flex items-stretch rounded-lg border border-zinc-950/10 dark:border-white/10 overflow-hidden">
+            <div className="relative flex items-center">
+              <div
+                className="w-8 h-full min-h-[2rem]"
+                style={{ backgroundColor: `rgba(${rgb.r},${rgb.g},${rgb.b},${(a / 255).toFixed(2)})` }}
+              />
+              <input
+                type="color"
+                value={hex}
+                onChange={(e) => setHex(e.target.value)}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+            </div>
+            <div className="w-px bg-zinc-950/10 dark:bg-white/10" />
+            <span className="px-2 flex items-center font-mono text-xs text-zinc-950/40 dark:text-white/30 select-none">
+              {hex.toUpperCase()}
+            </span>
+            <div className="w-px bg-zinc-950/10 dark:bg-white/10" />
+            <span className="px-2 flex items-center font-mono text-xs text-zinc-950/40 dark:text-white/30 select-none">
+              A
+            </span>
             <input
-              type="color"
-              value={shadowHex}
-              onChange={(e) => setShadowHex(e.target.value)}
-              className="w-8 h-7 rounded cursor-pointer border border-zinc-950/10 dark:border-white/10 bg-transparent p-0.5"
+              type="number"
+              min={0}
+              max={255}
+              value={a}
+              onChange={(e) => setA(Math.min(255, Math.max(0, Number(e.target.value))))}
+              className="w-12 px-1 bg-transparent font-mono text-sm text-zinc-950/70 dark:text-white/70 focus:outline-none"
             />
-            <span className="font-mono text-xs text-zinc-950/40 dark:text-white/40">{shadowHex.toUpperCase()}</span>
           </div>
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm text-zinc-950/70 dark:text-white/70">
-          Shadow opacity ({opacityPct}%)
-          <input
-            type="range"
-            min={0}
-            max={255}
-            value={shadowAlpha}
-            onChange={(e) => setShadowAlpha(Number(e.target.value))}
-            className="w-36 h-2 rounded-lg appearance-none cursor-pointer bg-zinc-950/20 dark:bg-white/20 mt-0.5"
-          />
         </label>
 
         <button
           onClick={applySettings}
-          className="text-sm px-3 py-1.5 rounded-lg border border-zinc-950/10 dark:border-white/10 text-zinc-950/70 dark:text-white/70 hover:bg-zinc-950/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+          className="self-end text-sm px-3 py-1.5 rounded-lg border border-zinc-950/10 dark:border-white/10 text-zinc-950/70 dark:text-white/70 hover:bg-zinc-950/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
         >
           Apply
         </button>
@@ -165,8 +174,8 @@ export const PixelBanner = () => {
                 key={i}
                 style={{
                   position: "relative",
-                  width: strip.main.width * SCALE + SCALE,
-                  height: strip.main.height * SCALE + SCALE,
+                  width: strip.main.width * scale + scale,
+                  height: strip.main.height * scale + scale,
                 }}
               >
                 <canvas
@@ -179,10 +188,10 @@ export const PixelBanner = () => {
                   }}
                   style={{
                     position: "absolute",
-                    top: SCALE,
-                    left: SCALE,
-                    width: strip.shadow.width * SCALE,
-                    height: strip.shadow.height * SCALE,
+                    top: scale,
+                    left: scale,
+                    width: strip.shadow.width * scale,
+                    height: strip.shadow.height * scale,
                     imageRendering: "pixelated",
                     display: "block",
                   }}
@@ -199,8 +208,8 @@ export const PixelBanner = () => {
                     position: "absolute",
                     top: 0,
                     left: 0,
-                    width: strip.main.width * SCALE,
-                    height: strip.main.height * SCALE,
+                    width: strip.main.width * scale,
+                    height: strip.main.height * scale,
                     imageRendering: "pixelated",
                     display: "block",
                   }}
