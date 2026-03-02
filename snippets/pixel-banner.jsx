@@ -1,223 +1,190 @@
-function buildShadowCanvas(sourceCanvas, shadowColor) {
-  const w = sourceCanvas.width;
-  const h = sourceCanvas.height;
-  const ctx = sourceCanvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, w, h);
-  const src = imageData.data;
-  const shadow = document.createElement("canvas");
-  shadow.width = w;
-  shadow.height = h;
-  const sCtx = shadow.getContext("2d");
-  const sData = sCtx.createImageData(w, h);
-  const dst = sData.data;
-  for (let i = 0; i < src.length; i += 4) {
-    dst[i]     = Math.round((src[i]     * shadowColor.r) / 255);
-    dst[i + 1] = Math.round((src[i + 1] * shadowColor.g) / 255);
-    dst[i + 2] = Math.round((src[i + 2] * shadowColor.b) / 255);
-    dst[i + 3] = Math.round((src[i + 3] * shadowColor.a) / 255);
-  }
-  sCtx.putImageData(sData, 0, 0);
-  return shadow;
-}
-
-function sliceCanvas(src, x, y, w, h) {
-  const c = document.createElement("canvas");
-  c.width = w;
-  c.height = h;
-  c.getContext("2d").drawImage(src, x, y, w, h, 0, 0, w, h);
-  return c;
-}
-
-function hexToRgb(hexStr) {
-  const clean = hexStr.replace("#", "");
-  return {
-    r: parseInt(clean.slice(0, 2), 16),
-    g: parseInt(clean.slice(2, 4), 16),
-    b: parseInt(clean.slice(4, 6), 16),
-  };
-}
-
 export const PixelBanner = () => {
-  const scale = 4;
-  const expectedW = 264;
-  const expectedH = 16;
-  const halfH = 8;
+  const [topCanvas, setTopCanvas] = useState(null)
+  const [bottomCanvas, setBottomCanvas] = useState(null)
+  const [pendingColor, setPendingColor] = useState("#000000")
+  const [pendingAlpha, setPendingAlpha] = useState(120)
+  const [topRaw, setTopRaw] = useState(null)
+  const [bottomRaw, setBottomRaw] = useState(null)
+  const [error, setError] = useState("")
+  const [dragging, setDragging] = useState(false)
+  const [fileName, setFileName] = useState("")
 
-  const [strips, setStrips] = useState(null);
-  const [hex, setHex] = useState("#000000");
-  const [alpha, setAlpha] = useState(255);
-  const [error, setError] = useState("");
-  const [dragging, setDragging] = useState(false);
-  const fileInputRef = useRef(null);
-  const mainCanvasesRef = useRef(null);
+  const hexToRgb = (hex) => ({
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+  })
 
-  const buildStripsFromCanvases = (top, bot, hexColor, alphaVal) => {
-    const rgb = hexToRgb(hexColor);
-    const sc = { r: rgb.r, g: rgb.g, b: rgb.b, a: alphaVal };
-    return [
-      { main: top, shadow: buildShadowCanvas(top, sc) },
-      { main: bot, shadow: buildShadowCanvas(bot, sc) },
-    ];
-  };
+  const buildShadowedCanvas = (srcData, sw, sh, shadowR, shadowG, shadowB, shadowA) => {
+    const scale = 4
+    const offset = 1
+    const dw = (sw + offset) * scale
+    const dh = (sh + offset) * scale
 
-  const processImage = (file) => {
-    if (!file) return;
-    setError("");
-    const img = new Image();
-    img.onload = () => {
-      if (img.width !== expectedW || img.height !== expectedH) {
-        setError(`Image must be exactly 264x16px. Got ${img.width}x${img.height}px.`);
-        return;
+    const canvas = document.createElement("canvas")
+    canvas.width = dw
+    canvas.height = dh
+    const ctx = canvas.getContext("2d")
+
+    // Draw shadow layer
+    const shadowImg = ctx.createImageData(dw, dh)
+    for (let y = 0; y < sh; y++) {
+      for (let x = 0; x < sw; x++) {
+        const si = (y * sw + x) * 4
+        const sA = srcData[si + 3]
+        if (sA === 0) continue
+
+        const mr = Math.round((srcData[si]     * shadowR) / 255)
+        const mg = Math.round((srcData[si + 1] * shadowG) / 255)
+        const mb = Math.round((srcData[si + 2] * shadowB) / 255)
+        const ma = Math.round((sA              * shadowA) / 255)
+
+        const dx = (x + offset) * scale
+        const dy = (y + offset) * scale
+        for (let py = 0; py < scale; py++) {
+          for (let px = 0; px < scale; px++) {
+            const di = ((dy + py) * dw + (dx + px)) * 4
+            shadowImg.data[di]     = mr
+            shadowImg.data[di + 1] = mg
+            shadowImg.data[di + 2] = mb
+            shadowImg.data[di + 3] = ma
+          }
+        }
       }
-      const full = document.createElement("canvas");
-      full.width = expectedW;
-      full.height = expectedH;
-      full.getContext("2d").drawImage(img, 0, 0);
-      const top = sliceCanvas(full, 0, 0, expectedW, halfH);
-      const bot = sliceCanvas(full, 0, halfH, expectedW, halfH);
-      mainCanvasesRef.current = [top, bot];
-      setStrips(buildStripsFromCanvases(top, bot, hex, alpha));
-    };
-    img.src = URL.createObjectURL(file);
-  };
+    }
+    ctx.putImageData(shadowImg, 0, 0)
 
-  const applySettings = () => {
-    if (!mainCanvasesRef.current) return;
-    const [top, bot] = mainCanvasesRef.current;
-    setStrips(buildStripsFromCanvases(top, bot, hex, alpha));
-  };
+    // Draw main image on top (upscaled, pixelated)
+    const tmp = document.createElement("canvas")
+    tmp.width = sw
+    tmp.height = sh
+    const tmpCtx = tmp.getContext("2d")
+    const mainImg = tmpCtx.createImageData(sw, sh)
+    mainImg.data.set(srcData)
+    tmpCtx.putImageData(mainImg, 0, 0)
 
-  const rgb = hexToRgb(hex);
-  const swatchColor = `rgba(${rgb.r},${rgb.g},${rgb.b},${(alpha / 255).toFixed(2)})`;
+    ctx.imageSmoothingEnabled = false
+    ctx.drawImage(tmp, 0, 0, sw * scale, sh * scale)
+
+    return canvas
+  }
+
+  const loadFile = (file) => {
+    setError("")
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      if (img.width !== 264 || img.height !== 16) {
+        setError(`Expected 264×16, got ${img.width}×${img.height}.`)
+        return
+      }
+      const offscreen = document.createElement("canvas")
+      offscreen.width = 264
+      offscreen.height = 16
+      const octx = offscreen.getContext("2d")
+      octx.drawImage(img, 0, 0)
+
+      const td = new Uint8ClampedArray(octx.getImageData(0, 0, 264, 8).data)
+      const bd = new Uint8ClampedArray(octx.getImageData(0, 8, 264, 8).data)
+
+      setTopRaw(td)
+      setBottomRaw(bd)
+      setFileName(file.name)
+
+      const { r, g, b } = hexToRgb(pendingColor)
+      setTopCanvas(buildShadowedCanvas(td, 264, 8, r, g, b, pendingAlpha))
+      setBottomCanvas(buildShadowedCanvas(bd, 264, 8, r, g, b, pendingAlpha))
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); setError("Failed to load image.") }
+    img.src = url
+  }
+
+  const handleApply = () => {
+    if (!topRaw || !bottomRaw) return
+    const { r, g, b } = hexToRgb(pendingColor)
+    setTopCanvas(buildShadowedCanvas(topRaw, 264, 8, r, g, b, pendingAlpha))
+    setBottomCanvas(buildShadowedCanvas(bottomRaw, 264, 8, r, g, b, pendingAlpha))
+  }
 
   return (
-    <div className="not-prose p-4 border dark:border-white/10 border-zinc-950/10 rounded-xl space-y-4">
+    <div style={{ fontFamily: "sans-serif", padding: "1.5rem", borderRadius: "0.75rem", border: "1px solid rgba(0,0,0,0.12)", maxWidth: "720px" }}>
 
-      <div className="flex flex-wrap gap-4 items-end">
-        <label className="flex flex-col gap-1 text-sm text-zinc-950/70 dark:text-white/70">
-          Shadow color
-          <div className="flex items-stretch rounded-lg border border-zinc-950/10 dark:border-white/10 overflow-hidden">
-            <div className="relative" style={{ width: 32 }}>
-              <div style={{ backgroundColor: swatchColor, position: "absolute", inset: 0 }} />
-              <input
-                type="color"
-                value={hex}
-                onChange={(e) => setHex(e.target.value)}
-                style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }}
-              />
-            </div>
-            <div className="w-px bg-zinc-950/10 dark:bg-white/10" />
-            <span className="px-2 flex items-center font-mono text-xs text-zinc-950/40 dark:text-white/30 select-none">
-              {hex.toUpperCase()}
-            </span>
-            <div className="w-px bg-zinc-950/10 dark:bg-white/10" />
-            <span className="px-2 flex items-center font-mono text-xs text-zinc-950/40 dark:text-white/30 select-none">
-              A
-            </span>
-            <input
-              type="number"
-              min={0}
-              max={255}
-              value={alpha}
-              onChange={(e) => setAlpha(Math.min(255, Math.max(0, Number(e.target.value))))}
-              style={{ width: 48, padding: "0 4px", background: "transparent" }}
-              className="font-mono text-sm text-zinc-950/70 dark:text-white/70 focus:outline-none"
-            />
+      {/* Upload zone */}
+      <label
+        htmlFor="pss-upload"
+        onDrop={(e) => { e.preventDefault(); setDragging(false); loadFile(e.dataTransfer.files[0]) }}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+        onDragLeave={() => setDragging(false)}
+        style={{
+          display: "flex", flexDirection: "column", alignItems: "center",
+          gap: "0.5rem", padding: "2rem", marginBottom: "1.25rem", cursor: "pointer",
+          border: `2px dashed ${dragging ? "#6366f1" : "rgba(0,0,0,0.2)"}`,
+          borderRadius: "0.5rem",
+          background: dragging ? "rgba(99,102,241,0.05)" : "transparent",
+          transition: "all 0.15s ease",
+        }}
+      >
+        <span style={{ fontSize: "2rem" }}>🖼️</span>
+        <span style={{ fontSize: "0.9rem", opacity: 0.7 }}>
+          {fileName ? `✓ ${fileName}` : "Click or drag & drop — 264×16 image"}
+        </span>
+        <input id="pss-upload" type="file" accept="image/*"
+          onChange={(e) => { if (e.target.files[0]) loadFile(e.target.files[0]) }}
+          style={{ display: "none" }} />
+      </label>
+
+      {error && (
+        <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#dc2626", borderRadius: "0.4rem", padding: "0.5rem 0.75rem", fontSize: "0.85rem", marginBottom: "1rem" }}>
+          {error}
+        </div>
+      )}
+
+      {/* Controls row */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
+        <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>Shadow</span>
+
+        {/* Pill: color picker + alpha field */}
+        <div style={{ display: "inline-flex", alignItems: "center", borderRadius: "9999px", border: "1px solid rgba(0,0,0,0.18)", overflow: "hidden", background: "rgba(0,0,0,0.03)" }}>
+          <label style={{ display: "flex", alignItems: "center", padding: "0.25rem 0.5rem", cursor: "pointer", borderRight: "1px solid rgba(0,0,0,0.12)" }}>
+            <input type="color" value={pendingColor} onChange={(e) => setPendingColor(e.target.value)}
+              style={{ width: 28, height: 28, border: "none", padding: 0, cursor: "pointer", background: "none" }} />
+          </label>
+          <div style={{ display: "flex", alignItems: "center", padding: "0 0.5rem 0 0.4rem", gap: "0.2rem" }}>
+            <span style={{ fontSize: "0.78rem", fontWeight: 700, opacity: 0.5 }}>A</span>
+            <input type="number" min={0} max={255} value={pendingAlpha}
+              onChange={(e) => setPendingAlpha(Math.min(255, Math.max(0, Number(e.target.value))))}
+              style={{ width: "3.2rem", border: "none", background: "transparent", fontSize: "0.875rem", textAlign: "right", outline: "none", padding: "0.25rem 0", color: "inherit" }} />
           </div>
-        </label>
+        </div>
 
-        <button
-          onClick={applySettings}
-          className="self-end text-sm px-3 py-1.5 rounded-lg border border-zinc-950/10 dark:border-white/10 text-zinc-950/70 dark:text-white/70 hover:bg-zinc-950/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
-        >
+        <button onClick={handleApply} disabled={!topRaw}
+          style={{ padding: "0.35rem 1rem", borderRadius: "9999px", border: "1px solid rgba(99,102,241,0.5)", background: topRaw ? "#6366f1" : "rgba(0,0,0,0.08)", color: topRaw ? "#fff" : "rgba(0,0,0,0.3)", fontSize: "0.875rem", fontWeight: 600, cursor: topRaw ? "pointer" : "not-allowed" }}>
           Apply
         </button>
       </div>
 
-      <div
-        onClick={() => fileInputRef.current && fileInputRef.current.click()}
-        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); processImage(e.dataTransfer.files[0]); }}
-        className={`rounded-lg border border-dashed px-4 py-3 text-center text-sm cursor-pointer select-none transition-colors ${
-          dragging
-            ? "border-zinc-950/30 dark:border-white/30 text-zinc-950/50 dark:text-white/50 bg-zinc-950/5 dark:bg-white/5"
-            : "border-zinc-950/20 dark:border-white/20 text-zinc-950/40 dark:text-white/40 hover:border-zinc-950/30 dark:hover:border-white/30"
-        }`}
-      >
-        {strips ? "Click or drop to replace image" : "Click or drop a 264×16 image here"}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/gif,image/webp"
-          onChange={(e) => processImage(e.target.files[0])}
-          className="hidden"
-        />
-      </div>
-
-      {error && (
-        <p className="text-sm font-mono text-red-500 dark:text-red-400 bg-red-500/5 border border-red-500/20 rounded-lg px-3 py-2">
-          {error}
-        </p>
-      )}
-
-      <div className="rounded-lg border border-zinc-950/10 dark:border-white/10 bg-zinc-950/5 dark:bg-white/5 p-4 overflow-x-auto flex items-center justify-center" style={{ minHeight: 64 }}>
-        {strips ? (
-          <div style={{ display: "inline-flex", flexDirection: "column" }}>
-            {strips.map((strip, i) => (
-              <div
-                key={i}
-                style={{
-                  position: "relative",
-                  width: strip.main.width * scale + scale,
-                  height: strip.main.height * scale + scale,
-                }}
-              >
+      {/* Output */}
+      {topCanvas && bottomCanvas && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", alignItems: "flex-start" }}>
+          {[["Top half (rows 0–7)", topCanvas], ["Bottom half (rows 8–15)", bottomCanvas]].map(([label, canvas]) => (
+            <div key={label}>
+              <div style={{ fontSize: "0.75rem", opacity: 0.5, marginBottom: "0.35rem" }}>{label}</div>
+              <div style={{ background: "repeating-conic-gradient(#bbb 0% 25%, #fff 0% 50%) 0 0 / 16px 16px", display: "inline-block", borderRadius: 4, overflow: "hidden", lineHeight: 0 }}>
                 <canvas
                   ref={(el) => {
-                    if (el && strip.shadow) {
-                      el.width = strip.shadow.width;
-                      el.height = strip.shadow.height;
-                      el.getContext("2d").drawImage(strip.shadow, 0, 0);
-                    }
+                    if (!el) return
+                    el.width = canvas.width
+                    el.height = canvas.height
+                    el.getContext("2d").drawImage(canvas, 0, 0)
                   }}
-                  style={{
-                    position: "absolute",
-                    top: scale,
-                    left: scale,
-                    width: strip.shadow.width * scale,
-                    height: strip.shadow.height * scale,
-                    imageRendering: "pixelated",
-                    display: "block",
-                  }}
-                />
-                <canvas
-                  ref={(el) => {
-                    if (el && strip.main) {
-                      el.width = strip.main.width;
-                      el.height = strip.main.height;
-                      el.getContext("2d").drawImage(strip.main, 0, 0);
-                    }
-                  }}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: strip.main.width * scale,
-                    height: strip.main.height * scale,
-                    imageRendering: "pixelated",
-                    display: "block",
-                  }}
+                  style={{ imageRendering: "pixelated", display: "block" }}
                 />
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-zinc-950/30 dark:text-white/30 font-mono">
-            No image loaded
-          </p>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
-  );
-};
+  )
+}
