@@ -42,39 +42,6 @@ function sliceCanvas(src, x, y, w, h) {
   return c;
 }
 
-const StripCanvas = ({ canvas }) => {
-  return (
-    <canvas
-      ref={(el) => {
-        if (el && canvas) {
-          el.width = canvas.width;
-          el.height = canvas.height;
-          el.getContext("2d").drawImage(canvas, 0, 0);
-        }
-      }}
-      style={{
-        width: canvas.width * SCALE,
-        height: canvas.height * SCALE,
-        imageRendering: "pixelated",
-        display: "block",
-      }}
-    />
-  );
-};
-
-const BannerStrip = ({ mainCanvas, shadowCanvas }) => {
-  return (
-    <div style={{ position: "relative", width: mainCanvas.width * SCALE + SCALE, height: mainCanvas.height * SCALE + SCALE }}>
-      <div style={{ position: "absolute", top: SCALE, left: SCALE }}>
-        <StripCanvas canvas={shadowCanvas} />
-      </div>
-      <div style={{ position: "absolute", top: 0, left: 0 }}>
-        <StripCanvas canvas={mainCanvas} />
-      </div>
-    </div>
-  );
-};
-
 export const PixelBanner = () => {
   const [strips, setStrips] = useState(null);
   const [shadowHex, setShadowHex] = useState("#000000");
@@ -99,7 +66,7 @@ export const PixelBanner = () => {
     const img = new Image();
     img.onload = () => {
       if (img.width !== EXPECTED_W || img.height !== EXPECTED_H) {
-        setError("Image must be exactly 264x16px. Got " + img.width + "x" + img.height + "px.");
+        setError(`Image must be exactly 264x16px. Got ${img.width}x${img.height}px.`);
         return;
       }
       const full = document.createElement("canvas");
@@ -122,95 +89,131 @@ export const PixelBanner = () => {
 
   const opacityPct = Math.round((shadowAlpha / 255) * 100);
 
-  const wrapperStyle = {
-    fontFamily: "ui-monospace, 'Cascadia Code', Menlo, monospace",
-    background: "#0c0c0c",
-    border: "1px solid #222",
-    borderRadius: 10,
-    padding: 20,
-    maxWidth: 860,
-  };
-
-  const dropBorder = dragging ? "1px dashed #4a9eff" : "1px dashed #2a2a2a";
-  const dropBg = dragging ? "rgba(74,158,255,0.04)" : "transparent";
-  const dropColor = dragging ? "#4a9eff" : "#444";
-
   return (
-    <div style={wrapperStyle}>
-      <div style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "#444", marginBottom: 16 }}>
-        Shadow Preview
-      </div>
+    <div className="not-prose p-4 border dark:border-white/10 border-zinc-950/10 rounded-xl space-y-4">
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-end", marginBottom: 16 }}>
-        <label style={{ fontSize: 12, color: "#888", display: "flex", flexDirection: "column", gap: 4 }}>
-          Shadow Color
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {/* Controls */}
+      <div className="flex flex-wrap gap-x-6 gap-y-3 items-end">
+        <label className="flex flex-col gap-1 text-sm text-zinc-950/70 dark:text-white/70">
+          Shadow color
+          <div className="flex items-center gap-2">
             <input
               type="color"
               value={shadowHex}
               onChange={(e) => setShadowHex(e.target.value)}
-              style={{ width: 34, height: 26, border: "1px solid #333", borderRadius: 4, background: "none", cursor: "pointer", padding: 2 }}
+              className="w-8 h-7 rounded cursor-pointer border border-zinc-950/10 dark:border-white/10 bg-transparent p-0.5"
             />
-            <span style={{ fontSize: 11, color: "#555" }}>{shadowHex.toUpperCase()}</span>
+            <span className="font-mono text-xs text-zinc-950/40 dark:text-white/40">{shadowHex.toUpperCase()}</span>
           </div>
         </label>
 
-        <label style={{ fontSize: 12, color: "#888", display: "flex", flexDirection: "column", gap: 4 }}>
-          {"Shadow Opacity (" + opacityPct + "%)"}
+        <label className="flex flex-col gap-1 text-sm text-zinc-950/70 dark:text-white/70">
+          Shadow opacity ({opacityPct}%)
           <input
             type="range"
             min={0}
             max={255}
             value={shadowAlpha}
             onChange={(e) => setShadowAlpha(Number(e.target.value))}
-            style={{ width: 130, accentColor: "#4a9eff" }}
+            className="w-36 h-2 rounded-lg appearance-none cursor-pointer bg-zinc-950/20 dark:bg-white/20 mt-0.5"
           />
         </label>
 
         <button
           onClick={applySettings}
-          style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", background: "#161616", border: "1px solid #2e2e2e", borderRadius: 6, color: "#999", padding: "7px 16px", cursor: "pointer" }}
+          className="text-sm px-3 py-1.5 rounded-lg border border-zinc-950/10 dark:border-white/10 text-zinc-950/70 dark:text-white/70 hover:bg-zinc-950/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
         >
           Apply
         </button>
       </div>
 
+      {/* Drop zone */}
       <div
         onClick={() => fileInputRef.current && fileInputRef.current.click()}
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={(e) => { e.preventDefault(); setDragging(false); processImage(e.dataTransfer.files[0]); }}
-        style={{ border: dropBorder, borderRadius: 8, padding: "14px 20px", cursor: "pointer", marginBottom: 16, background: dropBg, textAlign: "center", fontSize: 12, color: dropColor, userSelect: "none" }}
+        className={`rounded-lg border border-dashed px-4 py-3 text-center text-sm cursor-pointer select-none transition-colors ${
+          dragging
+            ? "border-zinc-950/30 dark:border-white/30 text-zinc-950/50 dark:text-white/50 bg-zinc-950/5 dark:bg-white/5"
+            : "border-zinc-950/20 dark:border-white/20 text-zinc-950/40 dark:text-white/40 hover:border-zinc-950/30 dark:hover:border-white/30"
+        }`}
       >
-        {strips ? "Click or drop to replace image" : "Click or drop a 264x16 PNG here"}
+        {strips ? "Click or drop to replace image" : "Click or drop a 264×16 image here"}
         <input
           ref={fileInputRef}
           type="file"
           accept="image/png,image/jpeg,image/gif,image/webp"
           onChange={(e) => processImage(e.target.files[0])}
-          style={{ display: "none" }}
+          className="hidden"
         />
       </div>
 
+      {/* Error */}
       {error && (
-        <div style={{ fontSize: 11, color: "#f77", background: "#1a0000", border: "1px solid #3a0000", borderRadius: 6, padding: "8px 12px", marginBottom: 14 }}>
+        <p className="text-sm font-mono text-red-500 dark:text-red-400 bg-red-500/5 border border-red-500/20 rounded-lg px-3 py-2">
           {error}
-        </div>
+        </p>
       )}
 
-      {strips ? (
-        <div style={{ background: "#060606", border: "1px solid #1a1a1a", borderRadius: 8, padding: 20, overflowX: "auto" }}>
-          <div style={{ display: "inline-flex", flexDirection: "column", gap: 0 }}>
+      {/* Preview */}
+      <div className="rounded-lg border border-zinc-950/10 dark:border-white/10 bg-zinc-950/5 dark:bg-white/5 p-4 overflow-x-auto min-h-16 flex items-center justify-center">
+        {strips ? (
+          <div style={{ display: "inline-flex", flexDirection: "column" }}>
             {strips.map((strip, i) => (
-              <BannerStrip key={i} mainCanvas={strip.main} shadowCanvas={strip.shadow} />
+              <div
+                key={i}
+                style={{
+                  position: "relative",
+                  width: strip.main.width * SCALE + SCALE,
+                  height: strip.main.height * SCALE + SCALE,
+                }}
+              >
+                <canvas
+                  ref={(el) => {
+                    if (el && strip.shadow) {
+                      el.width = strip.shadow.width;
+                      el.height = strip.shadow.height;
+                      el.getContext("2d").drawImage(strip.shadow, 0, 0);
+                    }
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: SCALE,
+                    left: SCALE,
+                    width: strip.shadow.width * SCALE,
+                    height: strip.shadow.height * SCALE,
+                    imageRendering: "pixelated",
+                    display: "block",
+                  }}
+                />
+                <canvas
+                  ref={(el) => {
+                    if (el && strip.main) {
+                      el.width = strip.main.width;
+                      el.height = strip.main.height;
+                      el.getContext("2d").drawImage(strip.main, 0, 0);
+                    }
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: strip.main.width * SCALE,
+                    height: strip.main.height * SCALE,
+                    imageRendering: "pixelated",
+                    display: "block",
+                  }}
+                />
+              </div>
             ))}
           </div>
-        </div>
-      ) : (
-        <div style={{ background: "#060606", border: "1px solid #1a1a1a", borderRadius: 8, height: 100, display: "flex", alignItems: "center", justifyContent: "center", color: "#222", fontSize: 11, letterSpacing: "0.2em" }}>
-          NO IMAGE LOADED
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-zinc-950/30 dark:text-white/30 font-mono">
+            No image loaded
+          </p>
+        )}
+      </div>
     </div>
   );
 };
