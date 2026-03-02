@@ -1,12 +1,12 @@
 export const PixelBanner = () => {
   const [topRaw, setTopRaw] = useState(null)
-  const [bottomRaw, setBottomRaw] = useState(null)
+  const[bottomRaw, setBottomRaw] = useState(null)
   const [topCanvas, setTopCanvas] = useState(null)
   const [bottomCanvas, setBottomCanvas] = useState(null)
-  const [pendingColor, setPendingColor] = useState("#000000")
+  const[pendingColor, setPendingColor] = useState("#000000")
   const [pendingAlpha, setPendingAlpha] = useState(160)
   const [error, setError] = useState("")
-  const [dragging, setDragging] = useState(false)
+  const[dragging, setDragging] = useState(false)
   const [fileName, setFileName] = useState("")
 
   const hexToRgb = (hex) => ({
@@ -15,14 +15,8 @@ export const PixelBanner = () => {
     b: parseInt(hex.slice(5, 7), 16),
   })
 
-  // Build a 265×9 canvas (at source pixels) for one 264×8 half.
-  // The shadow is the half image copied, each pixel's RGB multiplied by
-  // shadowColor/255, alpha set to shadowAlpha * srcAlpha/255,
-  // placed 1px down+right behind the main image.
-  // Canvas is 265×9 source pixels → rendered at 400% = 1060×36 CSS px.
   const buildHalfCanvas = (srcData, shadowR, shadowG, shadowB, shadowA) => {
     const SW = 264, SH = 8, SCALE = 4
-    // Output size in source pixels: 265×9 to fit 1px shadow offset
     const CW = SW + 1, CH = SH + 1
 
     const canvas = document.createElement("canvas")
@@ -33,13 +27,11 @@ export const PixelBanner = () => {
 
     const out = ctx.createImageData(canvas.width, canvas.height)
 
-    // Helper: write a source pixel to the output at (destX, destY) source coords
     const write = (destX, destY, r, g, b, a) => {
       if (destX < 0 || destY < 0 || destX >= CW || destY >= CH) return
       for (let py = 0; py < SCALE; py++) {
         for (let px = 0; px < SCALE; px++) {
           const i = (((destY * SCALE + py) * (CW * SCALE)) + (destX * SCALE + px)) * 4
-          // Blend over existing (shadow behind main: we draw shadow first)
           out.data[i]     = r
           out.data[i + 1] = g
           out.data[i + 2] = b
@@ -48,7 +40,6 @@ export const PixelBanner = () => {
       }
     }
 
-    // 1. Draw shadow layer (offset +1,+1)
     for (let y = 0; y < SH; y++) {
       for (let x = 0; x < SW; x++) {
         const si = (y * SW + x) * 4
@@ -64,7 +55,6 @@ export const PixelBanner = () => {
       }
     }
 
-    // 2. Draw main image on top at (0,0) — overwriting shadow where they overlap
     for (let y = 0; y < SH; y++) {
       for (let x = 0; x < SW; x++) {
         const si = (y * SW + x) * 4
@@ -248,14 +238,15 @@ export const PixelBanner = () => {
             overflow: "hidden",
             lineHeight: 0,
             border: "1px solid #2a2a2e",
+            maxWidth: "100%", // Fixed layout issue here
           }}>
             <canvas
               ref={canvasRef(topCanvas)}
-              style={{ display: "block", imageRendering: "pixelated", width: `${topCanvas.width}px`, height: `${topCanvas.height}px` }}
+              style={{ display: "block", imageRendering: "pixelated", maxWidth: "100%", height: "auto" }} // Fixed layout issue here
             />
             <canvas
               ref={canvasRef(bottomCanvas)}
-              style={{ display: "block", imageRendering: "pixelated", width: `${bottomCanvas.width}px`, height: `${bottomCanvas.height}px` }}
+              style={{ display: "block", imageRendering: "pixelated", maxWidth: "100%", height: "auto" }} // Fixed layout issue here
             />
           </div>
           <div style={{ fontSize: "10px", color: "#3a3a42", marginTop: "6px", letterSpacing: "0.04em" }}>
