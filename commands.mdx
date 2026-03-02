@@ -1,0 +1,19 @@
+---
+title: "Commands"
+description: "All commands available in Pictogram"
+sidebarTitle: "Commands"
+---
+
+All commands are under the `/pictogram` base command.
+
+## Commands
+
+| Command                        | Description                                              |
+| ------------------------------ | -------------------------------------------------------- |
+| `/pictogram status [image]`    | Shows the status of all images, or a specific one if you provide a name. |
+| `/pictogram view <image>`      | Sends the image in chat so you can preview it.           |
+| `/pictogram reload`            | Reloads the config.                                      |
+
+<Warning>
+  Reloading the config will start image batches, which can take quite a bit of time depending on your Mineskin API key's rate limit. If you don't have one, or want higher rate limits, you can grab a free key at [mineskin.org](https://mineskin.org).
+</Warning>
