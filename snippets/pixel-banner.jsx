@@ -28,8 +28,8 @@ function sliceCanvas(src, x, y, w, h) {
   return c;
 }
 
-function hexToRgb(hex) {
-  const clean = hex.replace("#", "");
+function hexToRgb(hexStr) {
+  const clean = hexStr.replace("#", "");
   return {
     r: parseInt(clean.slice(0, 2), 16),
     g: parseInt(clean.slice(2, 4), 16),
@@ -45,15 +45,15 @@ export const PixelBanner = () => {
 
   const [strips, setStrips] = useState(null);
   const [hex, setHex] = useState("#000000");
-  const [a, setA] = useState(255);
+  const [alpha, setAlpha] = useState(255);
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef(null);
   const mainCanvasesRef = useRef(null);
 
-  const buildStripsFromCanvases = (top, bot, h, alpha) => {
-    const rgb = hexToRgb(h);
-    const sc = { r: rgb.r, g: rgb.g, b: rgb.b, a: alpha };
+  const buildStripsFromCanvases = (top, bot, hexColor, alphaVal) => {
+    const rgb = hexToRgb(hexColor);
+    const sc = { r: rgb.r, g: rgb.g, b: rgb.b, a: alphaVal };
     return [
       { main: top, shadow: buildShadowCanvas(top, sc) },
       { main: bot, shadow: buildShadowCanvas(bot, sc) },
@@ -76,7 +76,7 @@ export const PixelBanner = () => {
       const top = sliceCanvas(full, 0, 0, expectedW, halfH);
       const bot = sliceCanvas(full, 0, halfH, expectedW, halfH);
       mainCanvasesRef.current = [top, bot];
-      setStrips(buildStripsFromCanvases(top, bot, hex, a));
+      setStrips(buildStripsFromCanvases(top, bot, hex, alpha));
     };
     img.src = URL.createObjectURL(file);
   };
@@ -84,29 +84,26 @@ export const PixelBanner = () => {
   const applySettings = () => {
     if (!mainCanvasesRef.current) return;
     const [top, bot] = mainCanvasesRef.current;
-    setStrips(buildStripsFromCanvases(top, bot, hex, a));
+    setStrips(buildStripsFromCanvases(top, bot, hex, alpha));
   };
 
   const rgb = hexToRgb(hex);
+  const swatchColor = `rgba(${rgb.r},${rgb.g},${rgb.b},${(alpha / 255).toFixed(2)})`;
 
   return (
     <div className="not-prose p-4 border dark:border-white/10 border-zinc-950/10 rounded-xl space-y-4">
 
-      {/* Shadow color control */}
       <div className="flex flex-wrap gap-4 items-end">
         <label className="flex flex-col gap-1 text-sm text-zinc-950/70 dark:text-white/70">
           Shadow color
           <div className="flex items-stretch rounded-lg border border-zinc-950/10 dark:border-white/10 overflow-hidden">
-            <div className="relative flex items-center">
-              <div
-                className="w-8 h-full min-h-[2rem]"
-                style={{ backgroundColor: `rgba(${rgb.r},${rgb.g},${rgb.b},${(a / 255).toFixed(2)})` }}
-              />
+            <div className="relative" style={{ width: 32 }}>
+              <div style={{ backgroundColor: swatchColor, position: "absolute", inset: 0 }} />
               <input
                 type="color"
                 value={hex}
                 onChange={(e) => setHex(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }}
               />
             </div>
             <div className="w-px bg-zinc-950/10 dark:bg-white/10" />
@@ -121,9 +118,10 @@ export const PixelBanner = () => {
               type="number"
               min={0}
               max={255}
-              value={a}
-              onChange={(e) => setA(Math.min(255, Math.max(0, Number(e.target.value))))}
-              className="w-12 px-1 bg-transparent font-mono text-sm text-zinc-950/70 dark:text-white/70 focus:outline-none"
+              value={alpha}
+              onChange={(e) => setAlpha(Math.min(255, Math.max(0, Number(e.target.value))))}
+              style={{ width: 48, padding: "0 4px", background: "transparent" }}
+              className="font-mono text-sm text-zinc-950/70 dark:text-white/70 focus:outline-none"
             />
           </div>
         </label>
@@ -136,7 +134,6 @@ export const PixelBanner = () => {
         </button>
       </div>
 
-      {/* Drop zone */}
       <div
         onClick={() => fileInputRef.current && fileInputRef.current.click()}
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -158,15 +155,13 @@ export const PixelBanner = () => {
         />
       </div>
 
-      {/* Error */}
       {error && (
         <p className="text-sm font-mono text-red-500 dark:text-red-400 bg-red-500/5 border border-red-500/20 rounded-lg px-3 py-2">
           {error}
         </p>
       )}
 
-      {/* Preview */}
-      <div className="rounded-lg border border-zinc-950/10 dark:border-white/10 bg-zinc-950/5 dark:bg-white/5 p-4 overflow-x-auto min-h-16 flex items-center justify-center">
+      <div className="rounded-lg border border-zinc-950/10 dark:border-white/10 bg-zinc-950/5 dark:bg-white/5 p-4 overflow-x-auto flex items-center justify-center" style={{ minHeight: 64 }}>
         {strips ? (
           <div style={{ display: "inline-flex", flexDirection: "column" }}>
             {strips.map((strip, i) => (
