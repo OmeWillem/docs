@@ -124,7 +124,7 @@ export const PixelBanner = () => {
         <span style={{ fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "#666", fontWeight: 600 }}>
           pixel shadow splitter
         </span>
-        <span style={{ fontSize: "10px", color: "#3a3a3e", letterSpacing: "0.06em" }}>264×16 → 2×(265×9 @4×)</span>
+        <span style={{ fontSize: "10px", color: "#3a3a3e", letterSpacing: "0.06em" }}>264×16 → required</span>
       </div>
 
       {/* Upload zone */}
@@ -250,7 +250,7 @@ export const PixelBanner = () => {
             />
           </div>
           <div style={{ fontSize: "10px", color: "#3a3a42", marginTop: "6px", letterSpacing: "0.04em" }}>
-            {topCanvas.width}×{topCanvas.height * 2} rendered · 4× nearest-neighbour
+            {topCanvas.width}×{topCanvas.height * 2} rendered
           </div>
         </div>
       ) : (
