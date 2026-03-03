@@ -35,6 +35,12 @@
               "luck-perms",
               "designing-images"
             ]
+          },
+          {
+            "group": "Other",
+            "pages": [
+              "mineskin"
+            ]
           }
         ]
       }
