@@ -48,6 +48,15 @@ Optionally, you can define a `fallback_description` that is shown to players on 
       - "this is optional and will show the default motd if not present!"
 ```
 
+### Virtual Hosts
+
+If you're using Pictogram on a proxy such as Velocity or BungeeCord, then you can supply one (or multiple) virtual host(s).
+
+```yaml
+    virtual_hosts:
+      - "skyblock.pictogram.com"
+```
+
 <Note>
   Either `image` or `description` is required per MOTD entry, not both.
 </Note>

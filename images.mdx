@@ -39,6 +39,24 @@ images:
 | `shadow_color` | An RGBA hex value for the text shadow. Optional. |
 
 ---
+## Fallback
+
+Fallbacks can also be used within images themselves, often handy if you allow multiple versions on your server. The fallback will appear if the image is not available yet, or if the image is not available for the specific player when using a placeholder with player context.
+
+```yaml
+images:
+  pictogram_tag:
+    path: pictogram_tag.png
+    shadow_color: "#FFFFFFFF"
+    fallback: "This will show if the image hasn't processed yet, or if the player can't see the image due to protocol versions!"
+```
+
+| Field          | Description                                      |
+| -------------- | ------------------------------------------------ |
+| `fallback` | Any MiniMessage value. Optional. |
+
+---
+
 
 ## Using Images
 

@@ -14,6 +14,9 @@ Pictogram has support for [MiniPlaceholders](https://modrinth.com/plugin/minipla
 
 | Placeholder              | Description                             |
 | ------------------------ | --------------------------------------- |
-| `<pictogram_image:name>` | Displays the image with the given name. |
+| `<pictogram_image:name>` | Displays the image with the given name, without any player context. |
+| `<pictogram_player_image:name>` | Displays the image with the given name, with player context, allowing for fallbacks. |
+| `<pictogram_ready:name>` | Checks if the given name is available (processed). |
+| `<pictogram_visible>` | If the player can see Pictogram images. |
 
 Replace `name` with the ID of any image registered in your `images` config. For example, `<pictogram_image:pictogram_tag>` would display the `pictogram_tag` image.
