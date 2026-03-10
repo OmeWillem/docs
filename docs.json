@@ -39,7 +39,8 @@
           {
             "group": "Other",
             "pages": [
-              "mineskin"
+              "mineskin",
+              "versions"
             ]
           }
         ]
