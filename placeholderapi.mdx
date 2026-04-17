@@ -1,0 +1,30 @@
+---
+description: "Support for PlaceholderAPI"
+sidebarTitle: "PlaceholderAPI"
+title: "PlaceholderAPI"
+---
+
+Pictogram has support for PlaceholderAPI, allowing you to use your registered images as placeholders anywhere that supports PlaceholderAPI parsing.
+
+<Warning>
+  This feature requires both **PlaceholderAPI** and **PacketEvents** to be installed on your server.
+</Warning>
+
+## Placeholders
+
+| Placeholder | Description |
+| --- | --- |
+| `%pictogram_image:<name>%` | Displays the image with the given name. |
+
+Replace `<name>` with the ID of any image registered in your `images` config. For example, `%pictogram_image:pictogram_tag%` would display the `pictogram_tag` image.
+
+---
+
+## Configuration
+
+Because Pictogram injects these images using packets, you have the ability to toggle this formatting behavior. If you wish to disable PlaceholderAPI image formatting, you can do so in your configuration file:
+
+```yaml
+settings:
+  packet-formatter: false
+```
