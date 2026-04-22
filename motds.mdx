@@ -60,3 +60,58 @@ If you're using Pictogram on a proxy such as Velocity or BungeeCord, then you ca
 <Note>
   Either `image` or `description` is required per MOTD entry, not both.
 </Note>
+
+---
+
+## Additional Settings
+
+These optional fields can be added to any MOTD entry, regardless of whether it uses `image` or `description`.
+
+### Icon
+
+Sets the server icon shown in the client's server list. The file must be located in your `images` directory.
+
+```yaml
+motds:
+  funny_motd:
+    image: test_motd
+    icon: icon.png
+```
+
+| Field  | Description                                                              |
+| ------ | ------------------------------------------------------------------------ |
+| `icon` | Filename of the server icon image. Must be located in the `images` directory. |
+
+### Hide Players
+
+Hides the player count from the server list ping. When enabled, clients will see `???` instead of the current online player count.
+
+<Warning>
+  This setting is only supported on **Velocity** and **Paper**. It is not available on BungeeCord.
+</Warning>
+
+```yaml
+motds:
+  funny_motd:
+    image: test_motd
+    hide_players: true
+```
+
+| Field          | Description                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| `hide_players` | Whether to hide the player count from the server list. Supported on Velocity and Paper only. |
+
+### Max Players
+
+Visually overrides the maximum player count shown in the server list. This is purely cosmetic and does not enforce any player limit.
+
+```yaml
+motds:
+  funny_motd:
+    image: test_motd
+    max_players: 67
+```
+
+| Field         | Description                                                                                   |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| `max_players` | The player count to display as the server maximum. Does not enforce an actual player limit. |
