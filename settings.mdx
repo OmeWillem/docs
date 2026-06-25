@@ -9,11 +9,15 @@ sidebarTitle: "Settings"
 ```yaml
 settings:
   mineskin-key: "insert api key"
+  ratelimit-warnings: true
+  packet-formatter: true
 ```
 
-| Field          | Description                                                                                                   |
-| -------------- | ------------------------------------------------------------------------------------------------------------- |
-| `mineskin-key` | Your [Mineskin](https://mineskin.org) API key. Technically optional, but recommended for better reliability.  |
+| Field | Description |
+| --- | --- |
+| `mineskin-key` | Your [Mineskin](https://mineskin.org) API key. Technically optional, but recommended for better reliability. |
+| `ratelimit-warnings` | Warns when MineSkin rate limits delay or stop image uploads. |
+| `packet-formatter` | Utilizes PacketEvents to add PlaceholderAPI support by formatting the packets. Restart required. |
 
 <Note>
   Without a Mineskin API key you may run into rate limits. It's worth grabbing a free key from [mineskin.org](https://mineskin.org).
